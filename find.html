@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <title>发现主页</title>
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <style>
+        html,
+        body {
+            background: #f1f1f1;
+        }
+        
+        .card_list_item {
+            background: #fff;
+            height: 54px;
+            line-height: 54px;
+            /*border-bottom: 1px solid #e4e4e4;*/
+            display: flex;
+            display: -webkit-flex;
+        }
+        
+        .item-bar {
+            margin-left: 13px;
+            display: flex;
+            display: -webkit-flex;
+            flex: 1;
+            -webkit-flex: 1;
+        }
+        
+        .item-img {
+            /*margin-left: 13px;*/
+            margin-top: 12px;
+            margin-right: 14px;
+        }
+        
+        .item-text {
+            font-size: 17px;
+            color: #2b2b2b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="content-vue">
+        <div class="content_list" id="content_list" v-html="vhtml">
+            <div class="card_list_item" tapmode="opacity" onclick="fnOpenWin('app_manage')">
+                <img class="item-img" src="../../image/find/icon-friends_circle.png" height="24px" width="24px">
+                <div class="item-text">朋友圈</div>
+            </div>
+            <div class="card_list_item" style="margin-top: 10px;">
+                <img class="item-img" src="../../image/find/icon-study.png" height="24px" width="24px">
+                <div class="item-text">学习资料</div>
+            </div>
+            <div class="card_list_item">
+                <img class="item-img" src="../../image/find/icon-smile.png" height="24px" width="24px">
+                <div class="item-text">每天一笑</div>
+            </div>
+            <div class="card_list_item" style="margin-top: 10px;">
+                <img class="item-img" src="../../image/find/icon-game.png" height="24px" width="24px">
+                <div class="item-text">游戏</div>
+            </div>
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/common.js"></script>
+<script type="text/javascript" src="../../script/language.js"></script>
+<script type="text/javascript" src="../../script/vue.js"></script>
+<script type="text/javascript" src="../../script/sortable.js"></script>
+<script type="text/javascript">
+    var card_list_item;
+    var item_bar;
+    var content_vue;
+    var language;
+    var card_list_name = []; //存储初始状态的数组
+    var language_data;
+    var user;
+    var loading;
+    apiready = function() {
+        //  $api.rmStorage('find_list');
+        user = $api.getStorage('user');
+        language = new Language();
+        loading = Loading();
+        //定义全局Vue
+        fnStatrVue();
+    };
+
+    //整个页面使用Vue渲染
+    function fnStatrVue() {
+        language_data = language.language();
+        content_vue = new Vue({
+            el: '.content-vue',
+            data: {
+                ldata: language_data,
+                vhtml: fnListHtml()
+            },
+            mounted: function() {
+                //加载页面元素
+                fninit();
+                api.parseTapmode();
+            }
+        })
+    }
+
+    function fninit() {
+        card_list_item = $api.domAll('.card_list_item');
+        card_list_item[1].style.marginTop = '10px';
+        // card_list_item[3].style.marginTop = '10px'; //打版需要隐藏二期功能
+        item_bar = $api.domAll('.item-bar');
+        $api.removeCls(item_bar[0], 'border-b');
+        $api.removeCls(item_bar[2], 'border-b');
+        // $api.removeCls(item_bar[3], 'border-b'); //打版需要隐藏二期功能
+        Sortable.create(content_list, {
+            group: 'shared'
+        });
+    }
+
+    //获取HTML代码
+    function fnListHtml() {
+        // var find_html = $api.getStorage('find_list');
+        var find_html;
+        if (user) {
+            find_html = fnReadFileSync(user.id + 'vhtml/find_list.json')
+        }
+        if (find_html && find_html != 'undefind') {
+            return find_html;
+        } else {
+            //获取初始html
+            var _html = fnGetInitialHtml();
+            return _html;
+        }
+    }
+
+    //获取初始html
+    function fnGetInitialHtml() {
+        card_list_name = ['friends_circle', 'study', 'smile', 'game'];
+        var _result = "";
+        // for(var i = 0; i < 4; i++){
+        for (var i = 0; i < 3; i++) { //打版需要隐藏二期功能
+            _result = _result + '<div class="card_list_item" tapmode="opacity" onclick="fnOpenWin(&quot;' + card_list_name[i] + '&quot;)" >' +
+                '<div class="item-bar border-b">' +
+                '<img class="item-img" src="../../image/find/icon-' + card_list_name[i] + '.png" height="30px" width="30px">' +
+                '<div class="item-text">' + language_data['l_' + card_list_name[i]] + '</div>' +
+                '</div>' +
+                '</div>';
+        }
+
+        return _result;
+    }
+
+    //保存排序结果
+    function fnSavelist() {
+        card_list_item[1].style.marginTop = '0';
+        // card_list_item[3].style.marginTop = '0'; //打版需要隐藏二期功能
+        card_list_item = $api.domAll('.card_list_item');
+        card_list_item[1].style.marginTop = '10px';
+        // card_list_item[3].style.marginTop = '10px'; //打版需要隐藏二期功能
+        $api.addCls(item_bar[0], 'border-b');
+        $api.addCls(item_bar[2], 'border-b');
+        // $api.addCls(item_bar[3], 'border-b'); //打版需要隐藏二期功能
+        item_bar = $api.domAll('.item-bar');
+        $api.removeCls(item_bar[0], 'border-b');
+        $api.removeCls(item_bar[2], 'border-b');
+        // $api.removeCls(item_bar[3], 'border-b'); //打版需要隐藏二期功能
+        var _html = $api.byId('content_list').innerHTML;
+        // alert(_html)
+        // $api.setStorage('find_list', _html);
+        if (user) {
+            fnWriteFile(user.id + 'vhtml/find_list.json', _html)
+        }
+    }
+
+    //打开下个页面
+    function fnOpenWin(name, param) {
+        if (user) {
+            setTimeout(function() {
+                api.openWin({
+                    name: name + '_win',
+                    url: './' + name + '_win.html',
+                    pageParam: param
+                });
+            }, 100)
+        } else {
+            fnRelogin();
+        }
+    }
+</script>
+
+</html>
